@@ -1,0 +1,52 @@
+import tensorflow as tf
+import numpy as np
+import scanpy as sc
+from tensorflow.keras.utils import to_categorical
+
+def build_class_map(label_map=dict):
+        subclasses = sorted(set(label_map.values()))
+        return {label: idx for idx, label in enumerate(subclasses)}
+
+class H5ADDataGenerator:
+    def __init__(self, file_paths, label_map, class_map, batch_size=32):
+        self.file_paths = file_paths
+        np.random.shuffle(self.file_paths)
+        self.label_map=label_map
+        self.class_map=class_map
+        self.num_classes = len(self.class_map)
+        self.batch_size = batch_size
+        self.file_tracker = 0
+        self.adata = None
+        self.n = None
+
+    def __call__(self):
+        while self.file_tracker < len( self.file_paths ):
+            self.adata = sc.read_h5ad( self.file_paths[ self.file_tracker ], backed='r')
+            self.adata = self.adata[ self.adata.obs.index.isin( list(self.label_map.keys()) ), : ] 
+            
+            self.n = self.adata.n_obs
+            
+            indices = np.arange(self.n)
+            
+            np.random.shuffle(indices)  # shuffle indices each time generator is called
+            
+            for start in range(0, self.n, self.batch_size):
+                end = min(start + self.batch_size, self.n)
+                batch_indices = indices[start:end]
+    
+                X_batch = self.adata.X[batch_indices]
+                X_batch = X_batch.toarray() if hasattr(X_batch, 'toarray') else X_batch
+    
+                cell_id = self.adata.obs_names[batch_indices]
+                label = [self.label_map.get(i) for i in cell_id]
+                class_id = [ self.class_map[i] for i in label]
+                y_batch = tf.keras.utils.to_categorical(class_id, num_classes=self.num_classes)
+    
+                yield (
+                    X_batch.astype(np.float32),
+                    y_batch.astype(np.float32)
+                )
+
+            self.file_tracker += 1
+            if self.file_tracker == len( self.file_paths ):
+                self.file_tracker = 0
