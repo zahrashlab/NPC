@@ -1,0 +1,30 @@
+label,acronym,name,order,color_hex_triplet
+WMB-MO-FRP,MO-FRP,Somatomotor - Frontal pole,0,#3DCC7C
+WMB-MOp,MOp,Primary motor area,1,#179968
+WMB-SS-GU-VISC,SS-GU-VISC,Somatosensory/gustatory/visceral areas,2,#2E8599
+WMB-SSp,SSp,Primary somatosensory area,3,#5CCCCC
+WMB-AUD,AUD,Auditory areas,4,#455A99
+WMB-AUD-TEa-PERI-ECT,AUD-TEa-PERI-ECT,Auditory/temporal/perirhinal/ectorhinal areas,5,#84FF4D
+WMB-VIS-PTLp,VIS-PTLp,Visual/posterior parietal  areas,6,#26AEFF
+WMB-VIS,VIS,Visual areas,7,#0059CC
+WMB-ACA,ACA,Anterior cingulate area,8,#00990A
+WMB-PL-ILA-ORB,PL-ILA-ORB,Prelimbic/infralimbic/orbital areas ,9,#8CCC00
+WMB-AI,AI,Agranular insular area,10,#6F9945
+WMB-RSP,RSP,Retrosplenial area,11,#E4FF26
+WMB-TEa-PERI-ECT,TEa-PERI-ECT,Temporal/perirhinal/ectorhinal areas ,12,#34CC1F
+WMB-OLF,OLF,Olfactory areas,13,#FF7373
+WMB-HIP,HIP,Hippocampal region,14,#FF8F00
+WMB-RHP,RHP,Retrohippocampal region,15,#CCB05C
+WMB-ENT,ENT,Entorhinal area,16,#99922E
+WMB-CTXsp,CTXsp,Cortical subplate,17,#994817
+WMB-STRd,STRd,Striatum dorsal region,18,#4D58FF
+WMB-STRv,STRv,Striatum ventral region,19,#341FCC
+WMB-LSX,LSX,Lateral septal complex,20,#00FFCF
+WMB-sAMY,sAMY,Striatum-like amygdalar nuclei,21,#300099
+WMB-PAL,PAL,Pallidum,22,#B973FF
+WMB-TH,TH,Thalamus,23,#FF00EF
+WMB-HY,HY,Hypothalamus,24,#9F3DCC
+WMB-MB,MB,Midbrain,25,#CC5CB0
+WMB-P,P,Pons,26,#992E6A
+WMB-MY,MY,Medulla,27,#FF2678
+WMB-CB,CB,Cerebellum,28,#CC0026
