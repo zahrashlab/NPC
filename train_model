@@ -1,0 +1,87 @@
+import argparse
+import scanpy as sc
+import tensorflow as tf
+import pandas as pd
+from H5ADDataGenerator import H5ADDataGenerator, build_class_map
+from my_model import cell_type_classifier_model
+import datetime
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, CSVLogger, TensorBoard
+
+def read_txt_to_list(file_path):
+    """Reads a text file and returns a list where each element is a line from the file."""
+    try:
+        with open(file_path, 'r') as file:
+            lines = file.readlines()
+        # Remove newline characters from each line
+        return [line.strip() for line in lines]
+    except FileNotFoundError:
+        print(f"Error: File not found at path: {file_path}")
+        return None
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--h5ad_files", type=str, help="A file that lists all .h5ad files", required=True)
+    parser.add_argument("--meta_file", help="The metadata file that contains the labels", required = True)
+    parser.add_argument("--target_col", default="subclass", help="Column name for labels")
+    parser.add_argument("--patience", default=10, type=int, help="Number of epochs with no improvement after which training will be stopped. Defaults to `10`.")
+    parser.add_argument("--per_gpu_batch_size", default=32, type=int, help="Batch size per GPU")
+    parser.add_argument("--epochs", default=100, type=int, help="Maximum number of epochs")
+    
+    args = parser.parse_args()
+
+    # Multi-GPU setup
+    strategy = tf.distribute.MirroredStrategy()
+
+    per_gpu_batch_size = args.per_gpu_batch_size
+    global_batch_size = per_gpu_batch_size * strategy.num_replicas_in_sync
+
+    meta = pd.read_csv(args.meta_file)
+    meta.set_index('cell_label', inplace=True)
+    
+    label_map = meta[ args.target_col ].to_dict()
+
+    class_map = build_class_map(label_map)
+
+    del(meta)
+    
+    h5ad_files = read_txt_to_list(args.h5ad_files)
+    
+    generator = H5ADDataGenerator(
+            file_paths=h5ad_files,
+            label_map=label_map,
+            class_map=class_map,
+            batch_size=global_batch_size
+            )
+    
+    with strategy.scope():
+        model=cell_type_classifier_model(input_dims=32285, output_dims=338)
+
+    dataset = tf.data.Dataset.from_generator(
+    lambda: generator(),
+    output_signature=(
+       tf.TensorSpec(shape=(None, 32285), dtype=tf.float32),
+       tf.TensorSpec(shape=(None, 338), dtype=tf.float32)
+    ))
+
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
+    
+    log_dir="/usr3/bustaff/zli5/projectnb/abc_atlas/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    
+    # Callbacks
+    callbacks = [
+        EarlyStopping(monitor="categorical_accuracy", patience=5),
+        ModelCheckpoint("/usr3/bustaff/zli5/projectnb/abc_atlas/abc_atlas_WMB_subclass_best_model.keras", monitor="categorical_accuracy", save_best_only=True),
+        TensorBoard(log_dir=log_dir, histogram_freq=1),
+        CSVLogger('/usr3/bustaff/zli5/projectnb/abc_atlas//training.log', append=True)
+    ]
+
+    # Train
+    model.fit(
+        dataset,
+        steps_per_epoch=80,
+        epochs=args.epochs,
+        callbacks=callbacks
+    )
+
+if __name__ == "__main__":
+    main()
